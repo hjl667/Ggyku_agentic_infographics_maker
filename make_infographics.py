@@ -17,6 +17,7 @@ from infographics_utils.utils import (
     get_color_clusters,
     get_prominent_colors,
 )
+from utils.search import retrieve_info_from_web
 
 
 def assemble_infographics(canvas_width, background_color, spacing=50):
@@ -82,4 +83,5 @@ def make_infographics(news, section_count=2):
 if __name__ == "__main__":
     SAMPLE_PROMPT = "starbucks's new ceo"
     # retrieve content
-    make_infographics("")
+    news = retrieve_info_from_web(SAMPLE_PROMPT)
+    make_infographics(news)

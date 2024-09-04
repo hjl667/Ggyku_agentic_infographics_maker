@@ -78,7 +78,7 @@ def get_term(script: dict, first_term: str = ""):
             builder.append(TASK + REQUIREMENTS + JSON_FORMAT + SOURCE)
             prompt = builder.get_final_result()
 
-            term = get_llm_response(prompt, "")
+            term = get_llm_response(prompt, "", response_format={"type": "json_object"},)
             return get_illustration_idea(json.loads(term))
         except Exception as e:
             logging.error(f"Unexpected error: {e}")

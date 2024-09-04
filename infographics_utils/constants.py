@@ -5,7 +5,7 @@ PARAGRAPH_COUNT = 3
 INFOGRAPHICS_THRESHOLD = 200
 
 # asset paths
-ASSETS_PATH = "src/news_writer/infographics_utils/assets"
+ASSETS_PATH = "infographics_utils/assets"
 
 REGULAR_FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"
 BOLD_FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"
