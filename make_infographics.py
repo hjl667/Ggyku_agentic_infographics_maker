@@ -1,7 +1,5 @@
-from typing import Dict, List, Optional, Sequence, Tuple
-
+import logging
 from PIL import Image, ImageDraw
-
 from infographics_utils.constants import (
     IMAGE_WIDTH,
     INFOGRAPHICS_PATH,
@@ -19,18 +17,6 @@ from infographics_utils.utils import (
     get_color_clusters,
     get_prominent_colors,
 )
-from src.news_writer.reporter_repositor.utils import assign_reporter
-from src.shared.constants.alembic import ALEMBIC_CONFIG_PATH
-from src.shared.db_queries.listen2ai import fetch_recent_unique_articles
-from src.shared.types.news import (
-    Language,
-    Listen2AICategory,
-    PoliticalOrientation,
-    Verbosity,
-)
-from src.shared.types.reporter import Reporter
-from src.shared.utils import log
-from src.shared.utils.db import create_session
 
 
 def assemble_infographics(canvas_width, background_color, spacing=50):
@@ -53,7 +39,7 @@ def assemble_infographics(canvas_width, background_color, spacing=50):
     next_y_position += spacing + text_block_02.height
 
     canvas.save(INFOGRAPHICS_PATH)
-    log.info("Infographic generated and saved as 'infographics.png'")
+    logging.info("Infographic generated and saved as 'infographics.png'")
 
 
 def prepare_components(script_dict: dict):
@@ -91,41 +77,3 @@ def make_infographics(news: dict, language, political_orientation, section_count
     script = generate_text_from_news(news, language, political_orientation, section_count)
     colors = prepare_components(script)
     assemble_infographics(IMAGE_WIDTH, colors[0][0], 50)
-
-
-def test_infographics():
-    with create_session(
-        alembic_config_path=ALEMBIC_CONFIG_PATH,
-        pool_recycle=1200,
-    ) as session:
-        try:
-            recently_published = fetch_recent_unique_articles(
-                session,
-                days=2,
-                category=Listen2AICategory.GENERAL,
-            ).all()
-            if recently_published:
-                news_dict = recently_published[0].article
-                language = Language.ENGLISH
-                political_orientation = PoliticalOrientation.NEUTRAL
-                make_infographics(news_dict, language, political_orientation)
-            else:
-                log.error("No news articles found in the database.")
-        except Exception as e:
-            log.error(f"An error occurred: {e}")
-
-
-def create_infographics(
-    article: Dict,
-    topic: str,
-    language: Language,
-    political_orientation: PoliticalOrientation,
-    reporters: List[Reporter],
-    length_limit: int = 0,
-) -> Tuple[str, Sequence[Reporter], List]:
-    make_infographics(article, language, political_orientation)
-    return ("", reporters, [])
-
-
-if __name__ == "__main__":
-    test_infographics()

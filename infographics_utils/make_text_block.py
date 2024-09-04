@@ -1,4 +1,5 @@
 import json
+import logging
 import textwrap
 
 from PIL import Image, ImageDraw, ImageFont
@@ -32,12 +33,8 @@ from infographics_utils.constants import (
     TEXT_BLOCK_TERM_PATH,
     make_save_path,
 )
-from src.news_writer.utils import format_language_display
-from src.shared.prompts.prompt_builder import PromptBuilder
-from src.shared.prompts.prompt_library import POLITICAL_ORIENTATION_PROMPT
-from src.shared.types.news import ArticleProcessingTask, Language, PoliticalOrientation
-from src.shared.utils import log
-from src.shared.utils.anthropic import create_message
+from prompts.prompt_builder import PromptBuilder
+from utils.llm import get_llm_response
 
 
 def wrap_text(text, max_chars, language="cn"):
@@ -252,29 +249,24 @@ def make_term_explanation_text_block(bg_color, term, explanation, language="cn")
 
 def generate_text_from_news(
     news: dict,
-    language: Language,
-    political_orientation: PoliticalOrientation,
     section_count: int = 2,
 ):
-    political_prompt = POLITICAL_ORIENTATION_PROMPT[political_orientation.name]
-    response_language = format_language_display(language)
-    SYSTEM_PROMPT = f"""{political_prompt} You must write in as much detail as possible. You're a best-seller writer in {response_language}. Respond in {response_language}. """
+    SYSTEM_PROMPT = f"""You must write in as much detail as possible. You're a best-seller writer in English. Respond in English. """
     retry_limit = 3
     attempts = 0
 
     while attempts < retry_limit:
         try:
-            response = create_message(
+            response = get_llm_response(
                 create_prompt_for_text_generation(news, section_count),
                 SYSTEM_PROMPT,
-                task_type=ArticleProcessingTask.GENERATE_SCRIPT,
                 response_format={"type": "json_object"},
             )
             return validate_text_json(json.loads(response))
         except Exception as e:
-            log.error(f"Unexpected error: {e}")
+            logging.error(f"Unexpected error: {e}")
             attempts += 1
-            log.info(f"Attempt {attempts}")
+            logging.info(f"Attempt {attempts}")
 
 
 def create_prompt_for_text_generation(news: dict, section_count: int):
@@ -313,5 +305,5 @@ def validate_text_json(text: dict):
             raise ValueError(
                 f"Invalid JSON format. The content list in section {section} does not contain at least 3 elements."
             )
-    log.info(text)
+    logging.info(text)
     return text

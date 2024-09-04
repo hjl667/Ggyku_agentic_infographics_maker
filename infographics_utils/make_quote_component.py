@@ -18,10 +18,9 @@ from infographics_utils.constants import (
     SPACING_02,
     SPACING_03,
 )
-from src.news_writer.infographics_utils.make_text_block import wrap_text_to_image
-from src.shared.prompts.prompt_builder import PromptBuilder
-from src.shared.types.news import ArticleProcessingTask
-from src.shared.utils.llm import create_message
+from infographics_utils.make_text_block import wrap_text_to_image
+from prompts.prompt_builder import PromptBuilder
+from utils.llm import get_llm_response
 
 
 def create_quote_icon(icon_size, icon_color, bg_color):
@@ -66,7 +65,7 @@ def get_quote(script: dict):
     builder.append(TASK + SOURCE)
     prompt = builder.get_final_result()
 
-    return create_message(prompt, "", task_type=ArticleProcessingTask.GENERATE_SCRIPT)
+    return get_llm_response(prompt, "")
 
 
 def make_quote_block(script: dict, colors, color_clusters):
