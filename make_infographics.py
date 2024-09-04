@@ -73,7 +73,13 @@ def prepare_components(script_dict: dict):
     return main_colors
 
 
-def make_infographics(news: dict, language, political_orientation, section_count=2):
-    script = generate_text_from_news(news, language, political_orientation, section_count)
+def make_infographics(news, section_count=2):
+    script = generate_text_from_news(news, section_count)
     colors = prepare_components(script)
     assemble_infographics(IMAGE_WIDTH, colors[0][0], 50)
+
+
+if __name__ == "__main__":
+    SAMPLE_PROMPT = "starbucks's new ceo"
+    # retrieve content
+    make_infographics("")

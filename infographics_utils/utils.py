@@ -1,4 +1,5 @@
 import json
+import logging
 from collections import Counter
 
 import numpy as np
@@ -6,7 +7,7 @@ import requests
 from PIL import Image
 from sklearn.cluster import KMeans
 
-from src.news_writer.infographics_utils.constants import (
+from infographics_utils.constants import (
     CLUSTER_RATIO_01,
     CLUSTER_RATIO_02,
     CLUSTER_RATIO_03,
@@ -31,14 +32,13 @@ from src.news_writer.infographics_utils.constants import (
     TERM_TEXT_SPACING_02,
     TEXT_BLOCK_TERM_PATH,
 )
-from src.news_writer.infographics_utils.make_text_block import (
+from infographics_utils.make_text_block import (
     make_term_explanation_text_block,
 )
-from src.shared.prompts.prompt_builder import Prompt, PromptBuilder
-from src.shared.types.news import ArticleProcessingTask, Language, Listen2AICategory
-from src.shared.utils import log
-from src.shared.utils.llm import create_message
-from src.shared.utils.openai import get_image
+from prompts.prompt_builder import PromptBuilder
+
+from utils.llm import get_llm_response
+from utils.llm import get_image
 
 
 def get_illustration_idea(term: dict):
@@ -51,8 +51,8 @@ def get_illustration_idea(term: dict):
 - Only output the one sentence illustration without any introduction"""
     builder.append(TASK + REQUIREMENTS)
     prompt = builder.get_final_result()
-    term["illustration"] = create_message(
-        prompt, "", task_type=ArticleProcessingTask.GENERATE_SCRIPT
+    term["illustration"] = get_llm_response(
+        prompt, ""
     )
     return term
 
@@ -78,12 +78,12 @@ def get_term(script: dict, first_term: str = ""):
             builder.append(TASK + REQUIREMENTS + JSON_FORMAT + SOURCE)
             prompt = builder.get_final_result()
 
-            term = create_message(prompt, "", task_type=ArticleProcessingTask.GENERATE_SCRIPT)
+            term = get_llm_response(prompt, "")
             return get_illustration_idea(json.loads(term))
         except Exception as e:
-            log.error(f"Unexpected error: {e}")
+            logging.error(f"Unexpected error: {e}")
             attempts += 1
-            log.info(f"Attempt {attempts}")
+            logging.info(f"Attempt {attempts}")
     return None
 
 
@@ -99,16 +99,16 @@ def generate_term_illustration(term: dict, is_second: bool = False):
         if image_response.status_code == 200:
             with open(TERM_ILLUSTRATION_02_PATH, "wb") as f:
                 f.write(image_response.content)
-            log.info("Image downloaded successfully.")
+            logging.info("Image downloaded successfully.")
         else:
-            log.error("Failed to download image.")
+            logging.error("Failed to download image.")
     else:
         if image_response.status_code == 200:
             with open(TERM_ILLUSTRATION_PATH, "wb") as f:
                 f.write(image_response.content)
-            log.info("Image downloaded successfully.")
+            logging.info("Image downloaded successfully.")
         else:
-            log.error("Failed to download image.")
+            logging.error("Failed to download image.")
 
 
 def generate_term_explanation_component(text: dict, is_second: bool = False, first_term: str = ""):
@@ -132,7 +132,7 @@ def generate_term_explanation_component(text: dict, is_second: bool = False, fir
         canvas.paste(term_illustration, (TERM_ILLUSTRATION_SPCAING + text_block.width, 0))
 
         canvas.save(TERM_BLOCK_02_PATH)
-        log.info("term block generated and saved as 'term_block02.png'")
+        logging.info("term block generated and saved as 'term_block02.png'")
 
     else:
         term_illustration = Image.open(TERM_ILLUSTRATION_PATH)
@@ -141,7 +141,7 @@ def generate_term_explanation_component(text: dict, is_second: bool = False, fir
         canvas.paste(text_block, (TERM_TEXT_SPACING_02, SPACING_01))
 
         canvas.save(TERM_BLOCK_PATH)
-        log.info("term block generated and saved as 'term_block.png'")
+        logging.info("term block generated and saved as 'term_block.png'")
 
     return term["term"]
 
@@ -154,9 +154,9 @@ def resize_generate_illustration(is_header: bool, width, image_path):
         if is_header:
             crop_height = int(height * CROP_RATIO)
             resized_img = resized_img.crop((0, 0, width, crop_height))
-            log.info(f"Image cropped to {width}x{crop_height}")
+            logging.info(f"Image cropped to {width}x{crop_height}")
         resized_img.save(image_path)
-        log.info(f"Image successfully resized to {width}x{height}")
+        logging.info(f"Image successfully resized to {width}x{height}")
 
 
 def get_prominent_colors(image_path=TERM_ILLUSTRATION_PATH, num_colors=DEFUALT_COLOR_NUMBER):
@@ -229,14 +229,4 @@ def replace_colors_with_clusters(image_path=HEADER_IMAGE_PATH, num_clusters=K_CL
     new_img = Image.fromarray(new_image_data.astype("uint8"), "RGB")
 
     new_img.save(image_path)
-    log.info(f"Image saved to {image_path}")
-
-
-def determine_need_infographics(language: Language, topic: Listen2AICategory, score):
-    if language not in [Language.ENGLISH] or topic not in [
-        Listen2AICategory.BUSINESS,
-        Listen2AICategory.TECHNOLOGY,
-    ]:
-        return False
-
-    return score >= INFOGRAPHICS_THRESHOLD
+    logging.info(f"Image saved to {image_path}")

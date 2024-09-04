@@ -248,7 +248,7 @@ def make_term_explanation_text_block(bg_color, term, explanation, language="cn")
 
 
 def generate_text_from_news(
-    news: dict,
+    news: str,
     section_count: int = 2,
 ):
     SYSTEM_PROMPT = f"""You must write in as much detail as possible. You're a best-seller writer in English. Respond in English. """
@@ -269,9 +269,9 @@ def generate_text_from_news(
             logging.info(f"Attempt {attempts}")
 
 
-def create_prompt_for_text_generation(news: dict, section_count: int):
+def create_prompt_for_text_generation(news: str, section_count: int):
     builder = PromptBuilder()
-    TASK = f"""rewrite "{news["content"]}" into {section_count} sections"""
+    TASK = f"""rewrite "{news}" into {section_count} sections"""
     INSTRUCTIONS = f"""(1) Craft witty, eye-catching subtitles that encapsulate each section. (2) generate a list of {PARAGRAPH_COUNT} paragraphs for each section under "content".
     (3) output the result strictly in the json format below."""
     JSON_FORMAT = """{{
