@@ -81,7 +81,7 @@ def make_infographics(news, section_count=2):
 
 
 if __name__ == "__main__":
-    SAMPLE_PROMPT = "starbucks's new ceo"
+    SAMPLE_PROMPT = "brain tumor research"
     # retrieve content
     news = retrieve_info_from_web(SAMPLE_PROMPT)
     make_infographics(news)

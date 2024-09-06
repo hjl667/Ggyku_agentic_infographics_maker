@@ -39,6 +39,7 @@ from prompts.prompt_builder import PromptBuilder
 
 from utils.llm import get_llm_response
 from utils.llm import get_image
+from utils.remove_bg import remove_background
 
 
 def get_illustration_idea(term: dict):
@@ -89,9 +90,13 @@ def get_term(script: dict, first_term: str = ""):
 
 def generate_term_illustration(term: dict, is_second: bool = False):
     builder = PromptBuilder()
-    STYLE = "isolated pure white background, vector artwork, flat symbols, flat vector illustration, simple and minimal, --v 5 --q 2, --s 750"
+    style = """Styles: Generate a simple 3D-like vector illustration with just one central, solid object. 
+        The background should be completely blank and pure white. The object should be clean, minimalistic, 
+        and clearly focused in the center of the image, with no distractions or additional elements around it. 
+        Ensure the design is easy to extract or isolate from the background.
+        """
     SCENE = term["illustration"]
-    builder.append(f"1({SCENE}) Styles: {STYLE}")
+    builder.append(f"1({SCENE}) appealing color scheme Styles: {style}")
     image_url = get_image(builder.get_final_result())
     image_response = requests.get(image_url)
 
@@ -114,10 +119,15 @@ def generate_term_illustration(term: dict, is_second: bool = False):
 def generate_term_explanation_component(text: dict, is_second: bool = False, first_term: str = ""):
     term = get_term(text, first_term)
     generate_term_illustration(term, is_second)
+    if is_second:
+        remove_background(TERM_ILLUSTRATION_02_PATH, TERM_ILLUSTRATION_02_PATH)
+    else:
+        remove_background(TERM_ILLUSTRATION_PATH, TERM_ILLUSTRATION_PATH)
     colors = get_prominent_colors(image_path=TERM_ILLUSTRATION_PATH, num_colors=2)
+
     background_color = colors[0][0]
     if is_second:
-        make_styles_match_infographics(TERM_ILLUSTRATION_02_PATH, 6)
+        # make_styles_match_infographics(TERM_ILLUSTRATION_02_PATH, 6)
         resize_generate_illustration(False, TERM_ILLUSTRATION_WIDTH, TERM_ILLUSTRATION_02_PATH)
 
     make_term_explanation_text_block(background_color, term["term"], term["explanation"], "cn")

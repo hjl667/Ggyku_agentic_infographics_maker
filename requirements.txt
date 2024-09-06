@@ -8,3 +8,4 @@ nltk==3.8.1
 requests~=2.32.3
 newspaper3k==0.2.8
 lxml_html_clean==0.2.0
+rembg==2.0.59
